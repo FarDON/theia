@@ -16,6 +16,8 @@
 
 import { injectable, inject } from 'inversify';
 import { JsonRpcServer, JsonRpcProxy } from '@theia/core';
+import { FileChangeType } from './files';
+export { FileChangeType };
 
 export const fileSystemWatcherPath = '/services/fs-watcher';
 
@@ -53,12 +55,6 @@ export interface DidFilesChangedParams {
 export interface FileChange {
     uri: string;
     type: FileChangeType;
-}
-
-export enum FileChangeType {
-    UPDATED = 0,
-    ADDED = 1,
-    DELETED = 2
 }
 
 export const FileSystemWatcherServerProxy = Symbol('FileSystemWatcherServerProxy');

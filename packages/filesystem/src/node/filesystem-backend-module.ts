@@ -24,6 +24,9 @@ import { NsfwFileSystemWatcherServer } from './nsfw-watcher/nsfw-filesystem-watc
 import { MessagingService } from '@theia/core/lib/node/messaging/messaging-service';
 import { NodeFileUploadService } from './node-file-upload-service';
 import { NsfwOptions } from './nsfw-watcher/nsfw-options';
+import { DiskFileSystemProvider } from './disk-file-system-provider';
+import { remoteFileSystemPath, RemoteFileSystemServer, RemoteFileSystemClient, FileSystemProviderServer } from '../common/remote-file-system-provider';
+import { FileSystemProvider } from '../common/files';
 
 const SINGLE_THREADED = process.argv.indexOf('--no-cluster') !== -1;
 
@@ -89,4 +92,17 @@ export default new ContainerModule(bind => {
 
     bind(NodeFileUploadService).toSelf().inSingletonScope();
     bind(MessagingService.Contribution).toService(NodeFileUploadService);
+
+    bind(DiskFileSystemProvider).toSelf();
+    bind(FileSystemProvider).toService(DiskFileSystemProvider);
+    bind(FileSystemProviderServer).toSelf();
+    bind(RemoteFileSystemServer).toService(FileSystemProviderServer);
+    bind(ConnectionHandler).toDynamicValue(ctx =>
+        new JsonRpcConnectionHandler<RemoteFileSystemClient>(remoteFileSystemPath, client => {
+            const server = ctx.container.get<RemoteFileSystemServer>(RemoteFileSystemServer);
+            server.setClient(client);
+            client.onDidCloseConnection(() => server.dispose());
+            return server;
+        })
+    ).inSingletonScope();
 });
